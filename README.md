@@ -77,3 +77,15 @@ for filename in $(ls tile_coords/*.csv); do
   cat $filename | tr ' ' ',' > tile_mapbox/$(basename "$filename").mapbox.csv
 done
 ```
+
+## Analyze
+
+### Sum Tile Requests
+
+`aggregate_requests.py` takes in a list of absolute filepaths and sums
+up the requests of the tiles.
+The csv files must already be prepared with the `prepare.sh` script.
+
+```
+ls -d -1 tile_logs/tiles-2015*.csv | ./aggregate_requests.py >> tiles-2015.csv
+```
