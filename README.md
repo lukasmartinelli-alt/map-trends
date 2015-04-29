@@ -11,6 +11,7 @@ Requirements
 
 - OSX or Linux
 - Python 2.7, Python 3.4 or PyPy
+- [GNU parallel](https://www.gnu.org/software/parallel/)
 
 Install Python requirements.
 

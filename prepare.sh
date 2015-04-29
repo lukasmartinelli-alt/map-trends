@@ -2,23 +2,22 @@
 set -e
 
 function download_test_log() {
-    mkdir -p tile_logs && cd tile_logs
     wget http://planet.openstreetmap.org/tile_logs/tiles-2015-01-01.txt.xz
-    cd ..
 }
 
 function download_logs() {
-    wget -nH -A xz -m http://planet.openstreetmap.org/tile_logs
+    wget -r -l1 -N --no-parent http://planet.openstreetmap.org/tile_logs
 }
 
 function decompress() {
+    cd tile_logs
     parallel 'unxz {}' ::: *.xz
+    rm *.xz
+    cd ..
 }
 
 function prepare_logs() {
     cd tile_logs
-    decompress
-    rm *.xz
     sed -i 's/\// /g' *.txt
     rename txt csv *.txt
     cd ..
@@ -41,12 +40,24 @@ function prepare_mapbox() {
     done
 }
 
-if [ "$1" = "test" ]; then
-    download_test_log
-else
+if [ "$1" = "download" ]; then
+    # download_test_log
     download_logs
+    mv planet.openstreetmap.org/tile_logs tile_logs && rm -r planet.openstreetmap.org
 fi
 
-prepare_logs
-convert_coords
-prepare_mapbox
+if [ "$1" = "prepare" ]; then
+    prepare_logs
+fi
+
+if [ "$1" = "convert" ]; then
+   convert_coords
+fi
+
+if [ "$1" = "decompress" ]; then
+   decompress 
+fi
+
+if [ "$1" = "mapbox" ]; then
+   prepare_mapbox
+fi
