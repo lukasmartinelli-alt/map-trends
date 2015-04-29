@@ -1,6 +1,9 @@
 # map-trends
 
-Show trends on maps
+Show trends on maps as part of a term paper.
+
+- [ ] Formulate project proposal
+- [ ] Define scope of project
 
 ## Install
 
@@ -22,14 +25,14 @@ pip install -r requirements.txt
 Download all logs from the server.
 
 ```bash
-mkdir -p tile_logs && cd tile_logs
-wget -nH --cut-dirs -A xz -m http://planet.openstreetmap.org/tile_logs
+wget -nH -A xz -m http://planet.openstreetmap.org/tile_logs
 ```
 
 Extract logs and remove compressed versions.
 
 ```bash
-unxz *.xz && rm *.xz
+unxz *.xz
+rm *.xz
 ```
 
 Expand tile coordinates in CSV to separate columns (from `1/2/3 123` to `1 2 3 123`).
@@ -41,9 +44,7 @@ sed -i 's/\// /g' *.txt
 Rename `.txt` files to `.csv`.
 
 ```bash
-for filename in ls tile_logs/*.txt; do
-  mv $filename $(basename "$filename".csv)
-done
+rename txt csv *.txt
 ```
 
 ### Calculate Coordinates
@@ -51,19 +52,21 @@ done
 Convert tile indizes from the logs with [slippy tile names](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames) to [Spherical Mercator](http://docs.openlayers.org/library/spherical_mercator.html) coordinates add CSV header.
 
 ```bash
-mkdir -p tile_coordinates
+mkdir -p tile_coords
 
-for filename in ls tile_logs/*.csv; do
+for filename in $(ls tile_logs/*.csv); do
   echo $(basename $filename)
-  echo "z x y requests latitude longitude" > tile_coordinates/$(basename "$filename")
-  cat $filename | ./calc_coordinates.py >> tiles_csv/$(basename "$filename".csv)
+  echo "z x y requests latitude longitude" > tile_coords/$(basename "$filename")
+  cat $filename | ./calc_coords.py >> tiles_coords/$(basename "$filename")
 done
 ```
 
 Convert from space delimited to comma delimited CSV (requirements for use in Mapbox).
 
 ```bash
-for filename in ls tile_logs/*.csv; do
-  cat $filename | tr ' ' ',' > "$filename".mapbox.csv
+mkdir -p tile_mapbox
+
+for filename in $(ls tile_coords/*.csv); do
+  cat $filename | tr ' ' ',' > tile_mapbox/$(basename "$filename").mapbox.csv
 done
 ```
