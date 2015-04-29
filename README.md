@@ -3,21 +3,37 @@ Show trends on maps
 
 ## Prepare Data
 
-1. Download all logs from the server.
+Download all logs from the server to the current directory.
 
 ```bash
-wget -m http://planet.openstreetmap.org/tile_logs
+wget -nH --cut-dirs -A xz -m http://planet.openstreetmap.org/tile_logs
+
 ```
 
-2. Extract logs
+Extract logs and remove compressed versions
 
 ```bash
-unxz *.xz
+unxz *.xz && rm *.xz
 ```
 
-3. Convert logs to CSV (`1/2/3 123` to `1 2 3 123`).
+Convert logs to space delimited CSV (`1/2/3 123` to `1 2 3 123`).
+
 ```bash
 sed -i 's/\// /g' *.txt
 ```
 
-- [ ] Convert tile indizes to latitude and longitude
+Convert tile indizes from logs to longitude and latitude and add CSV header
+
+```
+for filename in ls tile_logs/*.txt; do
+  echo $(basename $filename)
+  echo "z x y requests latitude longitude" > tiles_csv/$(basename "$filename" .csv)
+  cat $filename | pypy convert.py >> tiles_csv/$(basename "$filename" .csv)
+done
+```
+
+Convert from space delimited to comma delimited CSV (Mapbox requires that)
+
+```
+cat tiles-2015-01-01.csv | tr ' ' ',' > tiles-2015-01-01.mapbox.csv
+```
