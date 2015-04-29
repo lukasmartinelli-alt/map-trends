@@ -20,6 +20,12 @@ pip install -r requirements.txt
 
 ## Prepare Data
 
+You have several possiblities to prepare the data:
+
+- Follow the instructions
+- Use `./prepare.sh`
+- Download prepared tiles directly
+
 ### Download, Extract and Transform
 
 Download all logs from the server.

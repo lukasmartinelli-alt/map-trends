@@ -36,7 +36,7 @@ function prepare_mapbox() {
     done
 }
 
-if [ "$1" -eq "test" ]; then
+if [ "$1" = "test" ]; then
     download_test_log
 else
     download_logs
