@@ -8,12 +8,16 @@ function download_test_log() {
 }
 
 function download_logs() {
-    wget -nv -nc -nH -A xz -m http://planet.openstreetmap.org/tile_logs
+    wget -nH -A xz -m http://planet.openstreetmap.org/tile_logs
+}
+
+function decompress() {
+    parallel 'unxz {}' ::: *.xz
 }
 
 function prepare_logs() {
     cd tile_logs
-    unxz *.xz
+    decompress
     rm *.xz
     sed -i 's/\// /g' *.txt
     rename txt csv *.txt
@@ -22,17 +26,18 @@ function prepare_logs() {
 
 function convert_coords() {
     mkdir -p tile_coords
+    header="z x y requests latitude longitude"
     for filename in $(ls tile_logs/*.csv); do
-    echo $(basename $filename)
-    echo "z x y requests latitude longitude" > tile_coords/$(basename "$filename")
-    cat $filename | ./calc_coords.py >> tiles_coords/$(basename "$filename")
+        echo $(basename $filename)
+        echo "$header" > tile_coords/$(basename "$filename")
+        cat $filename | ./calc_coords.py >> tiles_coords/$(basename "$filename")
     done
 }
 
 function prepare_mapbox() {
     mkdir -p tile_mapbox
     for filename in $(ls tile_coords/*.csv); do
-    cat $filename | tr ' ' ',' > tile_mapbox/$(basename "$filename").mapbox.csv
+        cat $filename | tr ' ' ',' > tile_mapbox/$(basename "$filename").mapbox.csv
     done
 }
 
