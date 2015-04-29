@@ -1,4 +1,4 @@
-# map-trends
+# map-trends [![Build Status](https://travis-ci.org/lukasmartinelli/map-trends.svg?branch=master)](https://travis-ci.org/lukasmartinelli/map-trends)
 
 Show trends on maps as part of a term paper.
 
