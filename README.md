@@ -51,7 +51,7 @@ sed -i 's/\// /g' *.txt
 Rename `.txt` files to `.csv`.
 
 ```bash
-rename txt csv *.txt
+rename 's/\.txt$/\.csv/' *.txt
 ```
 
 ### Calculate Coordinates
@@ -86,6 +86,6 @@ done
 up the requests of the tiles.
 The csv files must already be prepared with the `prepare.sh` script.
 
-```
+```bash
 ls -d -1 tile_logs/tiles-2015*.csv | ./aggregate_requests.py >> tiles-2015.csv
 ```
