@@ -89,3 +89,9 @@ The csv files must already be prepared with the `prepare.sh` script.
 ```bash
 ls -d -1 tile_logs/tiles-2015*.csv | ./aggregate_requests.py >> tiles-2015.csv
 ```
+
+### Filter tiles by Level
+
+```bash
+cat tiles-2015-01-01.csv | awk '$1 == "18"' > cat tiles_18-2015-01-01.csv
+```
