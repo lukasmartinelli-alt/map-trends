@@ -95,3 +95,19 @@ ls -d -1 tile_logs/tiles-2015*.csv | ./aggregate_requests.py >> tiles-2015.csv
 ```bash
 cat tiles-2015-01-01.csv | awk '$1 == "18"' > cat tiles_18-2015-01-01.csv
 ```
+
+### Extract timeframe for tiles at level 18
+
+```bash
+echo "date requests latitude longitude" > tiles_over_time_switzerland.csv
+for filename in $(ls tile_coords/*.csv); do
+    base_filename=$(basename "$filename")
+    date=$(echo "$base_filename" | sed 's/tiles-//' | sed 's/\.csv//')
+    echo $date
+    cat $filename | \
+        awk '$1 == "18"' | \
+        cut -d ' ' -f4-6 | \
+        python filter_switzerland.py | \
+        sed -e "s/^/$date /" >> tiles_over_time_switzerland.csv
+done
+```
