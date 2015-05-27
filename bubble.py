@@ -14,6 +14,7 @@ MAX_ZOOM = 19
 cache_down = {}
 cache_up = {}
 cache_center = {}
+cache_date = {}
 
 
 def get_down_tiles(x, y, z, target_zoom):
@@ -45,6 +46,22 @@ def get_up_tile(x, y, z, target_zoom):
     return cache_up[k]
 
 
+def get_date_precision(date, date_prec, date_prec_measure):
+    if date not in cache_date:
+        old_date = date
+        if date_prec_measure == 'd':
+            date = '%s-%02d' % (date[:7], int(date[8:]) // date_prec * date_prec)
+        elif date_prec_measure == 'm':
+            date = '%s-%02d-01' % (date[:4], int(date[5:7]) // date_prec * date_prec)
+        elif date_prec_measure == 'y':
+            date = '%04d-01-01' % (int(date[:4]) // date_prec * date_prec)
+        else:
+            raise TypeError('unknown date precision measure %s' % date_prec_measure)
+        cache_date[old_date] = date
+        return date
+    return cache_date[date]
+
+
 def calculate_center(x, y, z):
     k = (x, y, z)
     if k not in cache_center:
@@ -69,13 +86,16 @@ def flush(stdout, tiles, min_count, max_count):
     return collections.defaultdict(int)
 
 
-def split(stdin, stdout,
+def split(stdin, stdout, date_precision=None,
           date_from=None, date_to=None,
           min_count=None, max_count=None,
           min_zoom=None, max_zoom=None,
           min_subz=None, max_subz=None):
     stdout.write(('%s,%s,%s,%s\n' % ('count', 'date', 'lat', 'lon')).encode())
 
+    if date_precision:
+        date_prec = int(date_precision[:-1])
+        date_prec_measure = date_precision[-1:]
     date_from = date_from or MIN_DATE
     date_to = date_to or MAX_DATE
     min_zoom = min_zoom or MIN_ZOOM
@@ -101,6 +121,9 @@ def split(stdin, stdout,
         z = int(z)
         if not min_zoom <= z <= max_zoom:
             continue
+
+        if date_precision is not None:
+            date = get_date_precision(date, date_prec, date_prec_measure)
 
         if flush_date is None:
             start = datetime.datetime.now()
@@ -128,6 +151,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Agregate OSM access logs.')
     parser.add_argument('--date_from', default=None)
     parser.add_argument('--date_to', default=None)
+    parser.add_argument('--date_precision', default=None)
     parser.add_argument('--min_zoom', type=int, default=None)
     parser.add_argument('--max_zoom', type=int, default=None)
     parser.add_argument('--min_subz', type=int, default=None)
