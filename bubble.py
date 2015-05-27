@@ -1,9 +1,11 @@
 import argparse
+import json
 import collections
 import datetime
 import sys
 
 import mercantile
+import shapely.geometry
 
 
 MIN_DATE = '0000-00-00'
@@ -15,6 +17,7 @@ cache_down = {}
 cache_up = {}
 cache_center = {}
 cache_date = {}
+cache_in_bound = {}
 
 
 def get_down_tiles(x, y, z, target_zoom):
@@ -74,7 +77,19 @@ def calculate_center(x, y, z):
     return cache_center[k]
 
 
-def flush(stdout, tiles, min_count, max_count):
+def in_boundaries(lat, lon, boundary, west, south, east, north):
+    k = (lat, lon)
+    if k not in cache_in_bound:
+        in_bounds = lat < north and lat > south and lon > west and lon < east
+        if in_bounds:
+            in_bounds = boundary.contains(shapely.geometry.Point(lon, lat))
+        cache_in_bound[k] = in_bounds
+        return in_bounds
+    return cache_in_bound[k]
+
+
+def flush(stdout, tiles, min_count, max_count, boundary):
+    boundary_bounds = boundary.bounds
     for k, count in tiles.items():
         if min_count and count < min_count:
             continue
@@ -82,17 +97,25 @@ def flush(stdout, tiles, min_count, max_count):
             continue
         date, z, x, y = k
         lat, lon = calculate_center(x, y, z)
+        if boundary is not None:
+            if not in_boundaries(lat, lon, boundary, *boundary_bounds):
+                continue
         stdout.write(('%s,%s,%s,%s\n' % (count, date, lat, lon)).encode())
     return collections.defaultdict(int)
 
 
 def split(stdin, stdout, date_precision=None,
+          boundary=None, boundary_buffer=None,
           date_from=None, date_to=None,
           min_count=None, max_count=None,
           min_zoom=None, max_zoom=None,
           min_subz=None, max_subz=None):
     stdout.write(('%s,%s,%s,%s\n' % ('count', 'date', 'lat', 'lon')).encode())
 
+    if boundary:
+        boundary = shapely.geometry.shape(json.load(open(boundary)))
+        if boundary_buffer is not None:
+            boundary = boundary.buffer(boundary_buffer)
     if date_precision:
         date_prec = float(date_precision[:-1])
         date_prec_measure = date_precision[-1:]
@@ -107,7 +130,7 @@ def split(stdin, stdout, date_precision=None,
     assert min_zoom <= max_zoom
     assert min_subz <= max_subz
 
-    tiles = flush(stdout, {}, min_count, max_count)
+    tiles = flush(stdout, {}, min_count, max_count, boundary)
     start = datetime.datetime.now()
     flush_date = None
 
@@ -144,7 +167,7 @@ def split(stdin, stdout, date_precision=None,
             tiles[(date, z, x, y)] += count
 
     sys.stderr.write('%s - %s\n' % (flush_date, datetime.datetime.now() - start))
-    flush(stdout, tiles, min_count, max_count)
+    flush(stdout, tiles, min_count, max_count, boundary)
 
 
 if __name__ == '__main__':
@@ -152,6 +175,8 @@ if __name__ == '__main__':
     parser.add_argument('--date_from', default=None)
     parser.add_argument('--date_to', default=None)
     parser.add_argument('--date_precision', default=None)
+    parser.add_argument('--boundary', default=None)
+    parser.add_argument('--boundary_buffer', type=float, default=None)
     parser.add_argument('--min_zoom', type=int, default=None)
     parser.add_argument('--max_zoom', type=int, default=None)
     parser.add_argument('--min_subz', type=int, default=None)
