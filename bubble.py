@@ -50,11 +50,11 @@ def get_date_precision(date, date_prec, date_prec_measure):
     if date not in cache_date:
         old_date = date
         if date_prec_measure == 'd':
-            date = '%s-%02d' % (date[:7], int(date[8:]) // date_prec * date_prec)
+            date = '%s-%02d' % (date[:7], int(date[8:]) // date_prec * date_prec + 1)
         elif date_prec_measure == 'm':
-            date = '%s-%02d-01' % (date[:4], int(date[5:7]) // date_prec * date_prec)
+            date = '%s-%02d-01' % (date[:4], int(date[5:7]) // date_prec * date_prec + 1)
         elif date_prec_measure == 'y':
-            date = '%04d-01-01' % (int(date[:4]) // date_prec * date_prec)
+            date = '%04d-01-01' % (int(date[:4]) // date_prec * date_prec + 1)
         else:
             raise TypeError('unknown date precision measure %s' % date_prec_measure)
         cache_date[old_date] = date
@@ -94,7 +94,7 @@ def split(stdin, stdout, date_precision=None,
     stdout.write(('%s,%s,%s,%s\n' % ('count', 'date', 'lat', 'lon')).encode())
 
     if date_precision:
-        date_prec = int(date_precision[:-1])
+        date_prec = float(date_precision[:-1])
         date_prec_measure = date_precision[-1:]
     date_from = date_from or MIN_DATE
     date_to = date_to or MAX_DATE
