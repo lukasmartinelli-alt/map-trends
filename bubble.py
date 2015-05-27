@@ -84,7 +84,8 @@ def split(stdin, stdout,
     max_subz = max_subz or max_zoom
 
     assert date_from <= date_to
-    assert min_zoom <= min_subz <= max_subz <= max_zoom
+    assert min_zoom <= max_zoom
+    assert min_subz <= max_subz
 
     tiles = flush(stdout, {}, min_count, max_count)
     start = datetime.datetime.now()
