@@ -29,7 +29,7 @@ function convert_coords() {
     for filename in $(ls tile_logs/*.csv); do
         echo $(basename $filename)
         echo "$header" > tile_coords/$(basename "$filename")
-        cat $filename | ./calc_coords.py >> tiles_coords/$(basename "$filename")
+        cat $filename | ./calc_coords.py >> tile_coords/$(basename "$filename")
     done
 }
 
