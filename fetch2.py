@@ -144,9 +144,11 @@ def get_country_geom(osm_id, iso):
     return geom
 
 
-def get_countries(rel=None, country=None):
+def get_countries(rel=None, country=None, query=None):
     countries = {}
-    if rel:
+    if query:
+        pass
+    elif rel:
         query = RELATION_QUERY % rel
     else:
         query = COUNTRIES_QUERY
@@ -441,7 +443,8 @@ def process_all(out, date_from=None, date_to=None,
     Stat().log('total parts: %s', len(part_countries))
 
     if not rel and not country and os.path.exists(TILE_CACHE):
-        min_cache_zoom, cache = json.load(open(TILE_CACHE))
+        with open(TILE_CACHE) as tile_cache_file:
+            min_cache_zoom, cache = json.load(tile_cache_file)
     else:
         min_cache_zoom, cache = create_cache(
             part_zoom, part_countries, splited_countries, min_cache_zoom)
@@ -450,8 +453,9 @@ def process_all(out, date_from=None, date_to=None,
         process_item(out, min_cache_zoom, cache, link,
                      part_zoom, part_countries, splited_countries,
                      min_zoom, max_zoom, rel or country)
-    if not rel and not country:
-        json.dump([min_cache_zoom, cache], open(TILE_CACHE, 'w'))
+        if not rel and not country:
+            with open(TILE_CACHE, 'w') as tile_cache_file:
+                json.dump([min_cache_zoom, cache], tile_cache_file)
 
 
 if __name__ == '__main__':
